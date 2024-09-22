@@ -1,19 +1,29 @@
+<div class="user-info">
+    <label for="loggedInUser">Logged in as:</label>
+    <input id="loggedInUser" [(ngModel)]="loggedInUserId" placeholder="Enter your User ID" />
+    <button (click)="addLoggedInUser()">Add</button>
+</div>
+
+<!-- Display the logged-in user name below -->
+<div *ngIf="loggedInUserName" class="logged-in-user-display">
+    <p><strong>User: {{ loggedInUserName }}</strong></p>
+</div>
+
 <div class="note-box">
     <div class="note-header">
         <h3>Notes</h3>
-        <button (click)="openModal('add')">Add</button>
-        <button (click)="openModal('edit')" [disabled]="!selectedNote">Edit</button>
-        <button (click)="openModal('delete')" [disabled]="!selectedNote">Delete</button>
+        <button (click)="openModal('add')" [disabled]="!loggedInUserName">Add</button>
+        <button (click)="openModal('edit')" [disabled]="!selectedNote || !loggedInUserName">Edit</button>
+        <button (click)="openModal('delete')" [disabled]="!selectedNote || !loggedInUserName">Delete</button>
     </div>
 
     <ul class="notes-list">
-        <li
-            *ngFor="let note of notes; let i = index"
-            [class.selected]="selectedNote === note"
-            class="note-item"
-            (click)="selectNote(note)"
-        >
-            {{ note.text }} <span *ngIf="note.userId">(Private)</span>
+        <li *ngFor="let note of notes; let i = index" [class.selected]="selectedNote === note" class="note-item"
+            (click)="selectNote(note)">
+            {{ note.text }}
+            <span *ngIf="note.userNames && note.userNames.length > 0">
+                (Private to: {{ note.userNames.join(', ') }})
+            </span>
         </li>
     </ul>
 </div>
@@ -21,30 +31,37 @@
 <!-- Modal for Add/Edit/Delete -->
 <div class="modal" *ngIf="showModal">
     <div class="modal-content">
-        <span class="close" (click)="closeModal()">&times;</span>
-        <h4 *ngIf="modalType === 'add'">Add Note</h4>
-        <h4 *ngIf="modalType === 'edit'">Edit Note</h4>
-        <h4 *ngIf="modalType === 'delete'">Delete Note</h4>
-
-        <div *ngIf="modalType !== 'delete'">
-            <input [(ngModel)]="currentNote" placeholder="Enter note here" />
-            <div class="note-toggle">
+      <span class="close" (click)="closeModal()">&times;</span>
+      <h4 *ngIf="modalType === 'add'">Add Note</h4>
+      <h4 *ngIf="modalType === 'edit'">Edit Note</h4>
+      <h4 *ngIf="modalType === 'delete'">Delete Note</h4>
+  
+      <div *ngIf="modalType !== 'delete'">
+        <input [(ngModel)]="currentNote" placeholder="Enter note here" />
+  
+        <div class="note-toggle">
+          <label>
+            <input type="checkbox" [(ngModel)]="isForEveryone" (change)="onForEveryoneChange()" />
+            For Everyone
+          </label>
+        </div>
+        <div class="user-checkboxes" *ngIf="!isForEveryone">
+            <h5>Select Users:</h5>
+            <div *ngFor="let user of userList">
                 <label>
-                    <input type="checkbox" [(ngModel)]="isForEveryone" (change)="onForEveryoneChange()" />
-                    For Everyone
+                    <input type="checkbox" [(ngModel)]="user.selected" />
+                    {{ user.name }}
                 </label>
             </div>
-
-            <div *ngIf="!isForEveryone">
-                <label for="userIds">User IDs:</label>
-                <select id="userIds" [(ngModel)]="selectedUserIds" multiple>
-                    <option *ngFor="let user of userList" [value]="user.id">{{ user.name }}</option>
-                </select>
-            </div>
         </div>
-        
-        <p *ngIf="modalType === 'delete'">Are you sure you want to delete this note?</p>
 
-        <button (click)="handleAction()">{{ modalType === 'delete' ? 'Confirm' : modalType === 'edit' ? 'Update' : 'Add' }}</button>
+    
+      </div>
+  
+      <p *ngIf="modalType === 'delete'">Are you sure you want to delete this note?</p>
+  
+      <button (click)="handleAction()">
+        {{ modalType === 'delete' ? 'Confirm' : modalType === 'edit' ? 'Update' : 'Add' }}
+      </button>
     </div>
-</div>
+  </div>
